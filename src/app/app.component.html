@@ -1,0 +1,19 @@
+<mgl-map
+  #map
+  [style]="'maputnik_layout_tim.json'"
+  [zoom]="[7.47]"
+  [center]="[5.737, 52.234]"
+>
+  <mgl-geojson-source
+    id="timmity-source"
+    [data]="geojsonData"
+  ></mgl-geojson-source>
+
+  <mgl-layer
+    [id]="'timmity-layer'"
+    [type]="'fill'"
+    source="timmity-source"
+
+    [paint]='geojsonPaint'
+  ></mgl-layer>
+</mgl-map>

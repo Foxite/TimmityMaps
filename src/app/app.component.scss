@@ -1,0 +1,13 @@
+:host {
+  display: flex;
+  flex: 1;
+  position: relative;
+}
+
+mgl-map {
+  flex: 1;
+}
+
+#mapCanvas {
+  display: none;
+}
