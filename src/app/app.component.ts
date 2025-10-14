@@ -1,5 +1,6 @@
 import {AfterViewInit, Component, ViewChild} from '@angular/core';
-import {GeoJSONSourceComponent, LayerComponent, MapComponent} from '@maplibre/ngx-maplibre-gl';
+import {EventData, GeoJSONSourceComponent, LayerComponent, MapComponent} from '@maplibre/ngx-maplibre-gl';
+import {MapMouseEvent} from 'maplibre-gl';
 
 type GeoJSONPoint = [number, number];
 type GeoJSONPoly = GeoJSONPoint[];
@@ -16,6 +17,7 @@ type GeoJSONPoly = GeoJSONPoint[];
 })
 export class AppComponent implements AfterViewInit {
   @ViewChild("map") map: MapComponent;
+  @ViewChild("geoJsonSource") geoJsonSource: GeoJSONSourceComponent;
 
   private polygons: GeoJSONPoly[] = [
     [
@@ -93,7 +95,8 @@ export class AppComponent implements AfterViewInit {
         5.588614383359101,
         52.054674643054
       ]
-    ]
+    ],
+    []
   ]
 
   protected geojsonData: any = {
@@ -110,14 +113,28 @@ export class AppComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
+    this.updatePolygons();
+  }
+
+  updatePolygons() {
     this.geojsonData.features = this.polygons.map((polygon, idx) => ({
-        "type": "Feature",
-        "properties": {},
-        "geometry": {
-          "coordinates": [polygon],
-          "type": "Polygon"
-        },
-        "id": idx
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "coordinates": [polygon],
+        "type": "Polygon"
+      },
+      "id": idx
     }));
+
+    this.geoJsonSource.updateFeatureData();
+  }
+
+  onClick(evt: MapMouseEvent & EventData) {
+    console.log(evt)
+
+    this.polygons[this.polygons.length - 1].push([evt.lngLat.lng, evt.lngLat.lat]);
+    this.updatePolygons();
+    console.log(this.geojsonData.features);
   }
 }

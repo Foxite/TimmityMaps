@@ -3,8 +3,11 @@
   [style]="'maputnik_layout_tim.json'"
   [zoom]="[7.47]"
   [center]="[5.737, 52.234]"
+
+  (mapClick)="onClick($event)"
 >
   <mgl-geojson-source
+    #geoJsonSource
     id="timmity-source"
     [data]="geojsonData"
   ></mgl-geojson-source>
