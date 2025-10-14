@@ -1,8 +1,14 @@
 import {AfterViewInit, Component, ViewChild} from '@angular/core';
-import {EventData, GeoJSONSourceComponent, LayerComponent, MapComponent} from '@maplibre/ngx-maplibre-gl';
+import {
+  EventData,
+  FeatureComponent,
+  GeoJSONSourceComponent,
+  LayerComponent,
+  MapComponent
+} from '@maplibre/ngx-maplibre-gl';
 import {MapMouseEvent} from 'maplibre-gl';
 
-type GeoJSONPoint = [number, number];
+type GeoJSONPoint = [lng: number, lat: number];
 type GeoJSONPoly = GeoJSONPoint[];
 
 @Component({
@@ -10,104 +16,31 @@ type GeoJSONPoly = GeoJSONPoint[];
   imports: [
     MapComponent,
     LayerComponent,
-    GeoJSONSourceComponent
+    GeoJSONSourceComponent,
+    FeatureComponent
   ],
   styleUrl: "app.component.scss",
   templateUrl: "app.component.html",
 })
 export class AppComponent implements AfterViewInit {
   @ViewChild("map") map: MapComponent;
-  @ViewChild("geoJsonSource") geoJsonSource: GeoJSONSourceComponent;
+  @ViewChild("polygonSource") polygonSource: GeoJSONSourceComponent;
+  @ViewChild("pointSource") pointSource: GeoJSONSourceComponent;
 
-  private polygons: GeoJSONPoly[] = [
-    [
-      [
-        4.773313152747079,
-        52.17415752180844
-      ],
-      [
-        5.99892798556624,
-        52.17415752180844
-      ],
-      [
-        5.99892798556624,
-        52.57198095428873
-      ],
-      [
-        5.773313152747079,
-        52.67198095428873
-      ],
-      [
-        4.773313152747079,
-        52.57198095428873
-      ],
-      [
-        4.773313152747079,
-        52.17415752180844
-      ]
-    ],
-    [
-      [
-        5.588614383359101,
-        52.054674643054
-      ],
-      [
-        5.789826055721136,
-        52.09884477892396
-      ],
-      [
-        5.6487116347194615,
-        52.11618360391003
-      ],
-      [
-        5.549938746937926,
-        52.16094724576777
-      ],
-      [
-        5.470408095975074,
-        52.15090274343086
-      ],
-      [
-        5.350053572716689,
-        52.12058549899234
-      ],
-      [
-        4.969884495202393,
-        52.083597915308786
-      ],
-      [
-        4.967531877151998,
-        51.99242563642747
-      ],
-      [
-        5.219260901970927,
-        51.79642988366544
-      ],
-      [
-        5.633319858683194,
-        51.79642988366544
-      ],
-      [
-        5.8097425336798665,
-        51.97359404155557
-      ],
-      [
-        5.588614383359101,
-        52.054674643054
-      ]
-    ],
-    []
-  ]
+  protected polygons: GeoJSONPoly[] = [];
 
-  protected geojsonData: any = {
-    type: "FeatureCollection",
-    features: []
-  }
+  protected polygonData: any = { type: "FeatureCollection", features: [] };
+  protected pointData: any = { type: "FeatureCollection", features: [] };
 
-  protected readonly geojsonPaint = {
+  protected polygonPaint = {
     "fill-color": "#ed333b",
     "fill-opacity": 0.5
-  }
+  };
+
+  protected pointPaint = {
+    "circle-color": '#3887be',
+    "circle-radius": 10,
+  };
 
   constructor() {
   }
@@ -117,24 +50,45 @@ export class AppComponent implements AfterViewInit {
   }
 
   updatePolygons() {
-    this.geojsonData.features = this.polygons.map((polygon, idx) => ({
-      "type": "Feature",
-      "properties": {},
-      "geometry": {
-        "coordinates": [polygon],
-        "type": "Polygon"
-      },
-      "id": idx
-    }));
+    this.polygonData = {
+      type: "FeatureCollection",
+      features: this.polygons.map((polygon, idx) => ({
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "coordinates": [polygon],
+          "type": "Polygon"
+        },
+        "id": idx,
+      })),
+    };
 
-    this.geoJsonSource.updateFeatureData();
+    this.pointData = {
+      type: "FeatureCollection",
+      features: this.polygons.flatMap(poly => poly).map((point, idx) => ({
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "coordinates": point,
+          "type": "Point"
+        },
+        "id": idx,
+      })),
+    }
+
+    console.log(this.polygons);
+    console.log(this.polygonData.features);
+    console.log(this.pointData.features);
+    console.log("scuh");
   }
 
-  onClick(evt: MapMouseEvent & EventData) {
-    console.log(evt)
+  onMapClick(evt: MapMouseEvent & EventData) {
+    if (this.polygons.length > 0 && this.polygons[this.polygons.length - 1].length < 4) {
+      this.polygons[this.polygons.length - 1].push([evt.lngLat.lng, evt.lngLat.lat]);
+    } else {
+      this.polygons.push([[evt.lngLat.lng, evt.lngLat.lat]]);
+    }
 
-    this.polygons[this.polygons.length - 1].push([evt.lngLat.lng, evt.lngLat.lat]);
     this.updatePolygons();
-    console.log(this.geojsonData.features);
   }
 }
