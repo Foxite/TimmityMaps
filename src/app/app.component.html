@@ -9,16 +9,41 @@
   <mgl-geojson-source
     #polygonSource
     id="polygon-source"
-    [data]="polygonData"
-  ></mgl-geojson-source>
+  >
+    @for (polygon of polygons; track polygon.index) {
+      <mgl-feature
+        [id]="polygon.index"
+        [properties]=""
+        [geometry]="{
+          coordinates: [polygon.points],
+          type: 'Polygon'
+        }"
+      ></mgl-feature>
+    }
+  </mgl-geojson-source>
   <mgl-geojson-source
     #pointSource
     id="point-source"
-    [data]="pointData"
   >
+    @for (polygon of polygons; track polygon.index) {
+      @for (point of polygon.points; track $index) {
+        @let pointIndex = $index;
+        <mgl-feature
+          [id]="getPointIndex(polygon.index, pointIndex)"
+          [properties]=""
+          [geometry]="{
+            type: 'Point',
+            coordinates: point,
+          }"
+          [mglDraggable]="pointLayer"
+          (featureDrag)="onDrag(polygon.index, pointIndex, $event)"
+        ></mgl-feature>
+      }
+    }
   </mgl-geojson-source>
 
   <mgl-layer
+    #polygonLayer
     [id]="'polygon-layer'"
     [type]="'fill'"
     source="polygon-source"
@@ -26,6 +51,7 @@
     [paint]='polygonPaint'
   ></mgl-layer>
   <mgl-layer
+    #pointLayer
     [id]="'point-layer'"
     [type]="'circle'"
     source="point-source"

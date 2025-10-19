@@ -1,5 +1,6 @@
 import {AfterViewInit, Component, ViewChild} from '@angular/core';
 import {
+  DraggableDirective,
   EventData,
   FeatureComponent,
   GeoJSONSourceComponent,
@@ -9,7 +10,10 @@ import {
 import {MapMouseEvent} from 'maplibre-gl';
 
 type GeoJSONPoint = [lng: number, lat: number];
-type GeoJSONPoly = GeoJSONPoint[];
+type GeoJSONPoly = {
+  index: number,
+  points: GeoJSONPoint[],
+};
 
 @Component({
   selector: 'app-root',
@@ -17,7 +21,8 @@ type GeoJSONPoly = GeoJSONPoint[];
     MapComponent,
     LayerComponent,
     GeoJSONSourceComponent,
-    FeatureComponent
+    FeatureComponent,
+    DraggableDirective
   ],
   styleUrl: "app.component.scss",
   templateUrl: "app.component.html",
@@ -29,8 +34,7 @@ export class AppComponent implements AfterViewInit {
 
   protected polygons: GeoJSONPoly[] = [];
 
-  protected polygonData: any = { type: "FeatureCollection", features: [] };
-  protected pointData: any = { type: "FeatureCollection", features: [] };
+  protected polygonIndexCounter = 0;
 
   protected polygonPaint = {
     "fill-color": "#ed333b",
@@ -46,9 +50,10 @@ export class AppComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.updatePolygons();
+    //this.updatePolygons();
   }
 
+  /*
   updatePolygons() {
     this.polygonData = {
       type: "FeatureCollection",
@@ -81,14 +86,39 @@ export class AppComponent implements AfterViewInit {
     console.log(this.pointData.features);
     console.log("scuh");
   }
+  //*/
 
   onMapClick(evt: MapMouseEvent & EventData) {
-    if (this.polygons.length > 0 && this.polygons[this.polygons.length - 1].length < 4) {
-      this.polygons[this.polygons.length - 1].push([evt.lngLat.lng, evt.lngLat.lat]);
+    if (this.polygons.length > 0 && this.polygons[this.polygons.length - 1].points.length < 4) {
+      this.polygons[this.polygons.length - 1].points.push([evt.lngLat.lng, evt.lngLat.lat]);
     } else {
-      this.polygons.push([[evt.lngLat.lng, evt.lngLat.lat]]);
+      this.polygons.push({
+        index: this.polygonIndexCounter++,
+        points: [[evt.lngLat.lng, evt.lngLat.lat]],
+      });
     }
 
-    this.updatePolygons();
+    console.log(this.polygons);
+
+    //this.updatePolygons();
+  }
+
+  onDragStart(polygonIndex: number, pointIndex: number, event: MapMouseEvent) {
+    console.log('onDragStart', event);
+  }
+
+  onDragEnd(polygonIndex: number, pointIndex: number, event: MapMouseEvent) {
+    console.log('onDragEnd', event);
+  }
+
+  onDrag(polygonIndex: number, pointIndex: number, event: MapMouseEvent) {
+    console.log(`onDrag ${polygonIndex} ${pointIndex}`, event);
+
+    //this.polygons[polygonIndex].points[pointIndex] = [event.lngLat.lng, event.lngLat.lat];
+    //this.coordinates.set(event.lngLat.toArray());
+  }
+
+  getPointIndex(polygonIndex: number, pointIndex: number): number {
+    return polygonIndex * 4 + pointIndex;
   }
 }
